@@ -7,6 +7,9 @@ from board_piece import piece
 class board:
     def __init__(self):
         #  terrain, edge, lostTribe, symbolType, neighbors
+        
+        # make this an array instead 
+        # but if you keep it this way, theres a magic method in a class __
         p1 = piece('sea', True, False, None)
         p2 = piece('farm', True, False, ['magic_source'])
         p3 = piece('forest', True, False, ['mining'])
@@ -54,6 +57,12 @@ class board:
         p21.neighbors = [p14, p15, p20, p22, p23]
         p22.neighbors = [p15, p16, p21, p23]
         p23.neighbors = [p16, p21, p22]
+
+        self.array = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, 
+        p18, p19, p20, p21, p22, p23]
+
+    def get_piece(self, index):
+        return self.array[index]
 
 
 
