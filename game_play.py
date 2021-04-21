@@ -20,7 +20,7 @@ class game_play:
 
 
     # first move for both the players
-    def start(self):
+    def start_game(self):
         number = random.randint(0, 1)
         self.whose_turn = None
         # Ratmen first
@@ -28,6 +28,7 @@ class game_play:
             self.whose_turn = self.Ratmen
         else:
             self.whose_turn = self.Trolls  
+        return self.whose_turn.name
 
     # make one move within a turn (a turn consists of multiple moves)
     # space is a number, 3 would represent p3
@@ -65,6 +66,15 @@ class game_play:
             piece.decline_space(player.name)
             player.decline_spaces.append(piece)
             player.spaces_occupied.remove(piece)
+        player.num_pieces = 0
+
+    # the turn after decline
+    def after_decline(self):
+        player = self.whose_turn
+        if player.name == 'ratmen':
+            player.num_pieces = 12
+        else:
+            player.num_pieces = 10
 
     # At the start of a players turn, one of their pieces is left behind in each area 
     def start_of_turn(self):
@@ -78,14 +88,35 @@ class game_play:
 
     # At the end of a players turn, distribute all the pieces evenly
     def distribute_endturn(self):
-        
+        player = self.whose_turn
+        # leave at least this many pieces in each of the players spaces occupied
+        piece_perspot = player.num_pieces / len(player.spaces_occupied)
+        for piece in player.spaces_occupied:
+            piece.update_numPieces(piece_perspot, player.name)
+        remaining_pieces = player.num_pieces % len(player.spaces_occupied)
+        # distribute the remaining pieces randomly (evenly as possible)
+        for i in len(remaining_pieces):
+            player.spaces_occupied[i].update_numPieces(piece_perspot + 1, player.name)
 
-
-
-    
-
-
-# def one_turn(whose_turn):
+    # print for whose turn it is, what board pieces have their people and how many 
+    def print_game(self):
+        player = self.whose_turn
+        message = ''
+        if player.name == 'ratmen':
+            message += 'It is the ' + player.name + '\'s turn\n'
+            message += 'They have ' + str(player.num_pieces) + ' piece\n'
+            for piece in player.spaces_occupied:
+                message += piece.name + ' has ' + str(piece.numRats) + ' ratmen on it\n'
+            for piece in player.decline_spaces:
+                message += piece.name + 'has a ratman in decline on it\n'
+        else:
+            message += 'It is the ' + player.name + ' turn\n'
+            message += 'They have ' + str(player.num_pieces) + ' piece\n'
+            for piece in player.spaces_occupied:
+                message += piece.name + ' has ' + str(piece.numRats) + ' trolls on it\n'
+            for piece in player.decline_spaces:
+                message += piece.name + 'has a troll in decline on it\n'
+        print(message)
 
 
 class player:

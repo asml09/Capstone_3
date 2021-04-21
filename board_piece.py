@@ -4,11 +4,12 @@ class piece:
     # lostTribe - whether a space has the indigenous race on it, boolean
     # symbolType - underworld, magic source, mining
     # numPieces - how many pieces on this space
-    def __init__(self, terrain, edge, lostTribe, symbolType, neighbors = []):
+    def __init__(self, terrain, edge, lostTribe, symbolType, name, neighbors = []):
         self.terrain = terrain
         self.edge = edge
         self.lostTribe = lostTribe
         self.symbolType = symbolType
+        self.name = name
         self.neighbors = neighbors 
         self.numRats = 0
         self.numTrolls = 0

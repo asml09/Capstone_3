@@ -10,29 +10,29 @@ class board:
         
         # make this an array instead 
         # but if you keep it this way, theres a magic method in a class __
-        p1 = piece('sea', True, False, None)
-        p2 = piece('farm', True, False, ['magic_source'])
-        p3 = piece('forest', True, False, ['mining'])
-        p4 = piece('swamp', True, True, ['underworld'])
-        p5 = piece('hill', True, False, None)
-        p6 = piece('mountain', True, False, ['mining', 'underworld'])
-        p7 = piece('hill', False, True, None)
-        p8 = piece('sea', False, False, None)
-        p9 = piece('mountain', False, False, None)
-        p10 = piece('farm', False, False, None)
-        p11 = piece('forest', True, True, ['magic_source'])
-        p12 = piece('farm', True, True, None)
-        p13 = piece('forest', False, True, None)
-        p14 = piece('farm', False, True, ['magic_source'])
-        p15 = piece('hill', False, True, ['underworld'])
-        p16 = piece('mountain', True, False, ['mining'])
-        p17 = piece('swamp', True, True, ['magic_source'])
-        p18 = piece('hill', True, False, ['underworld'])
-        p19 = piece('swamp', True, True, ['mining'])
-        p20 = piece('mountain', True, False, None)
-        p21 = piece('swamp', True, False, None)
-        p22 = piece('forest', True, False, None)
-        p23 = piece('sea', True, False, None)
+        p1 = piece('sea', True, False, None, 'p1')
+        p2 = piece('farm', True, False, ['magic_source'], 'p2')
+        p3 = piece('forest', True, False, ['mining'], 'p3')
+        p4 = piece('swamp', True, True, ['underworld'], 'p4')
+        p5 = piece('hill', True, False, None, 'p5')
+        p6 = piece('mountain', True, False, ['mining', 'underworld'], 'p6')
+        p7 = piece('hill', False, True, None, 'p7')
+        p8 = piece('sea', False, False, None, 'p8')
+        p9 = piece('mountain', False, False, None, 'p9')
+        p10 = piece('farm', False, False, None, 'p10')
+        p11 = piece('forest', True, True, ['magic_source'], 'p11')
+        p12 = piece('farm', True, True, None, 'p12')
+        p13 = piece('forest', False, True, None, 'p13')
+        p14 = piece('farm', False, True, ['magic_source'], 'p14')
+        p15 = piece('hill', False, True, ['underworld'], 'p15')
+        p16 = piece('mountain', True, False, ['mining'], 'p16')
+        p17 = piece('swamp', True, True, ['magic_source'], 'p17')
+        p18 = piece('hill', True, False, ['underworld'], 'p18')
+        p19 = piece('swamp', True, True, ['mining'], 'p19')
+        p20 = piece('mountain', True, False, None, 'p20')
+        p21 = piece('swamp', True, False, None, 'p21')
+        p22 = piece('forest', True, False, None, 'p22')
+        p23 = piece('sea', True, False, None, 'p23')
 
         p1.neighbors = [p2, p6]
         p2.neighbors = [p1, p3, p6, p7]
@@ -63,6 +63,13 @@ class board:
 
     def get_piece(self, index):
         return self.array[index]
+
+    def get_string(self, index):
+        # return ('p' + str(index))
+        print(str(self.array[index]))
+
+b = board()
+b.get_string(0)
 
 
 
