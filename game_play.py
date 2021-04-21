@@ -15,9 +15,9 @@ class game_play:
         self.Trolls = player(10, 'one_extra_defense', 'one_coin_non_empty', 'trolls')
         self.Ratmen.opponent = self.Trolls
         self.Trolls.opponent = self.Ratmen
-        self.rat_spaces_occupied = []
-        self.troll_spaces_occupied = []
-        
+        # self.rat_spaces_occupied = []
+        # self.troll_spaces_occupied = []
+
 
     # first move for both the players
     def start(self):
@@ -30,6 +30,7 @@ class game_play:
             self.whose_turn = self.Trolls  
 
     # make one move within a turn (a turn consists of multiple moves)
+    # space is a number, 3 would represent p3
     def take_turn(self, space):
         player = self.whose_turn
         opponent = self.whose_turn.opponent
@@ -44,20 +45,44 @@ class game_play:
             piece.update_numPieces(0, opponent)
             opponent.spaces_occupied.remove(piece)
             opponent.num_pieces -= 1
+        # Does this spot have the opponents decline race in it. If it does, remove the decline piece
+        # from both the board and from the opponents decline_spaces
+        if piece.get_decline(opponent.name):
+            piece.remove_decline(opponent.name)
+            opponent.decline_spaces.remove(piece)
+
 
     def decline(self):
-        pieces_declined = []
-        if self.whose_turn == self.Ratmen:
-            pieces_declined = self.rat_spaces_occupied
-        else:
-            pieces_declined = self.troll_spaces_occupied
+        player = self.whose_turn
+        # remove any remaining declined pieces from the board
+        player.decline_spaces = []
+        pieces_declined = player.spaces_occupied
+        # if self.whose_turn == self.Ratmen:
+        #     pieces_declined = self.rat_spaces_occupied
+        # else:
+        #     pieces_declined = self.troll_spaces_occupied
         for piece in pieces_declined:
-            piece.decline_space(self.whose_turn.name)
+            piece.decline_space(player.name)
+            player.decline_spaces.append(piece)
+            player.spaces_occupied.remove(piece)
+
+    # At the start of a players turn, one of their pieces is left behind in each area 
+    def start_of_turn(self):
+        player = self.whose_turn
+        spaces_occupied = player.spaces_occupied
+        # how many pieces the player has to play with
+        free_pieces = player.num_pieces - len(spaces_occupied)
+        for piece in spaces_occupied: 
+            piece.update_numPieces(1, player.name)
+        return free_pieces
+
+    # At the end of a players turn, distribute all the pieces evenly
+    def distribute_endturn(self):
+        
 
 
 
-    # At the start of a players turn, one piece is left behind in each of the areas they own. 
-    # def start_turn(self):
+    
 
 
 # def one_turn(whose_turn):
@@ -71,6 +96,7 @@ class player:
         self.name = name
         self.opponent = None
         self.spaces_occupied = []
+        self.decline_spaces = []
 
 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]

@@ -46,6 +46,23 @@ class piece:
         if race == 'ratmen':
             self.numRats = 0
             self.declineRat = True
+        else:
+            self.numTrolls = 0
+            self.declineTroll = True
+
+    # takes in name - 'ratmen' or 'trolls' and returns a boolean of if their declined race 
+    # occupies that spot
+    def get_decline(self, name):
+        if name == 'ratmen':
+            return self.declineRat
+        else:
+            return self.declineTroll
+
+    def remove_decline(self, name):
+        if name == 'ratmen':
+            self.declineRat = False
+        else:
+            self.declineTroll = False
 
     
 
