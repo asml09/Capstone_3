@@ -7,17 +7,19 @@ import random
 # player 2 - trolls and pillaging
 # 10 player pieces, +1 for every non-empty region conquered. +1 defense for every region occupied
 
-game_board = board()
+
 
 class game_play:
-    def __init__(self):
-        self.Ratmen = player(12, 'forest_power', 'lots_of_people', 'ratmen')
-        self.Trolls = player(10, 'one_extra_defense', 'one_coin_non_empty', 'trolls')
+    
+    def __init__(self, board):
+        self.game_board = board
+        self.Ratmen = player(12, 'forest_power', 'lots_of_people', 'ratmen', self.game_board)
+        self.Trolls = player(10, 'one_extra_defense', 'one_coin_non_empty', 'trolls', self.game_board)
         self.Ratmen.opponent = self.Trolls
         self.Trolls.opponent = self.Ratmen
+
         # self.rat_spaces_occupied = []
         # self.troll_spaces_occupied = []
-
 
     # first move for both the players
     def start_game(self):
@@ -31,19 +33,20 @@ class game_play:
         return self.whose_turn.name
 
     # make one move within a turn (a turn consists of multiple moves)
-    # space is a number, 3 would represent p3
+    # space is string representation of piece such as 'p3' 
+    # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
     def take_turn(self, space):
         player = self.whose_turn
         opponent = self.whose_turn.opponent
-        piece = game_board.get_piece(space)
-        self.whose_turn.one_move(piece)
+        piece = self.game_board.get_piece(space)
+        self.whose_turn.one_move(space)
         player.spaces_occupied.append(piece)
-        num_opponent = piece.get_raceCount(opponent)
+        num_opponent = piece.get_raceCount(opponent.name)
         # If this player is attacking an opponent, the piece is updated to no longer store the opponent
         # The player class for the opponent is updated so that they no longer occupy that space 
         # 1 is subtracted from the number of pieces this player has
         if num_opponent > 0:
-            piece.update_numPieces(0, opponent)
+            piece.update_numPieces(0, opponent.name)
             opponent.spaces_occupied.remove(piece)
             opponent.num_pieces -= 1
         # Does this spot have the opponents decline race in it. If it does, remove the decline piece
@@ -52,6 +55,23 @@ class game_play:
             piece.remove_decline(opponent.name)
             opponent.decline_spaces.remove(piece)
 
+    # def one_move(self, space):
+    #     self.pieces_left = self.num_pieces
+    #     boolean = self.is_a_move(space)
+    #     piece = game_board.get_piece(space)
+    #     pieces_required = piece.pieces_required()
+    #     if boolean:
+    #         self.pieces_left -= pieces_required
+    #         piece.update_numPieces(pieces_required, self.name)
+    #         if piece.lostTribe == True:
+    #             piece.lostTribe = False
+
+    # it's the next players turn
+    def change_turns(self):
+        if self.whose_turn.name == 'ratmen':
+            self.whose_turn = self.Trolls
+        else:
+            self.whose_turn = self.Ratmen
 
     def decline(self):
         player = self.whose_turn
@@ -104,23 +124,23 @@ class game_play:
         message = ''
         if player.name == 'ratmen':
             message += 'It is the ' + player.name + '\'s turn\n'
-            message += 'They have ' + str(player.num_pieces) + ' piece\n'
+            message += 'They have ' + str(player.num_pieces) + ' pieces\n'
             for piece in player.spaces_occupied:
                 message += piece.name + ' has ' + str(piece.numRats) + ' ratmen on it\n'
             for piece in player.decline_spaces:
                 message += piece.name + 'has a ratman in decline on it\n'
         else:
             message += 'It is the ' + player.name + ' turn\n'
-            message += 'They have ' + str(player.num_pieces) + ' piece\n'
+            message += 'They have ' + str(player.num_pieces) + ' pieces\n'
             for piece in player.spaces_occupied:
-                message += piece.name + ' has ' + str(piece.numRats) + ' trolls on it\n'
+                message += piece.name + ' has ' + str(piece.numTrolls) + ' trolls on it\n'
             for piece in player.decline_spaces:
                 message += piece.name + 'has a troll in decline on it\n'
         print(message)
 
 
 class player:
-    def __init__(self, num_pieces, race_power, special_power, name):
+    def __init__(self, num_pieces, race_power, special_power, name, board):
         self.num_pieces = num_pieces
         self.race_power = race_power
         self.special_power = special_power
@@ -128,6 +148,7 @@ class player:
         self.opponent = None
         self.spaces_occupied = []
         self.decline_spaces = []
+        self.game_board = board
 
 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
@@ -135,20 +156,20 @@ class player:
     def one_move(self, space):
         self.pieces_left = self.num_pieces
         boolean = self.is_a_move(space)
-        piece = game_board.get_piece(space)
+        piece = self.game_board.get_piece(space)
         pieces_required = piece.pieces_required()
         if boolean:
             self.pieces_left -= pieces_required
             piece.update_numPieces(pieces_required, self.name)
-            if piece.lostTribe == True:
+            if piece.lostTribe:
                 piece.lostTribe = False
             
 
     # returns true or false depending on if the move is legal
     def is_a_move(self, space):
-        piece = game_board.get_piece(space)
+        piece = self.game_board.get_piece(space)
         pieces_required = piece.pieces_required()
-        return self.pieces_left < pieces_required
+        return pieces_required < self.pieces_left  
 
 
 

@@ -34,7 +34,8 @@ class piece:
             count += 1
         count += self.numRats
         count += self.numTrolls
-        return count + 2
+        # return count + 2
+        return 2
 
     def get_raceCount(self, race):
         if race == 'ratmen':
