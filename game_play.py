@@ -24,36 +24,45 @@ class game_play:
     # first move for both the players
     def start_game(self):
         number = random.randint(0, 1)
-        self.whose_turn = None
+        # self.whose_turn = None
+        self.whose_turn = self.Trolls
         # Ratmen first
-        if number == 0:
-            self.whose_turn = self.Ratmen
-        else:
-            self.whose_turn = self.Trolls  
-        return self.whose_turn.name
+        # if number == 0:
+        #     self.whose_turn = self.Ratmen
+        # else:
+        #     self.whose_turn = self.Trolls  
+        # return self.whose_turn.name
 
     # make one move within a turn (a turn consists of multiple moves)
     # space is string representation of piece such as 'p3' 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
-    def take_turn(self, space):
+    def take_turn(self, space, firstTurn):
         player = self.whose_turn
         opponent = self.whose_turn.opponent
         piece = self.game_board.get_piece(space)
-        self.whose_turn.one_move(space)
-        player.spaces_occupied.append(piece)
-        num_opponent = piece.get_raceCount(opponent.name)
-        # If this player is attacking an opponent, the piece is updated to no longer store the opponent
-        # The player class for the opponent is updated so that they no longer occupy that space 
-        # 1 is subtracted from the number of pieces this player has
-        if num_opponent > 0:
-            piece.update_numPieces(0, opponent.name)
-            opponent.spaces_occupied.remove(piece)
-            opponent.num_pieces -= 1
-        # Does this spot have the opponents decline race in it. If it does, remove the decline piece
-        # from both the board and from the opponents decline_spaces
-        if piece.get_decline(opponent.name):
-            piece.remove_decline(opponent.name)
-            opponent.decline_spaces.remove(piece)
+        legal = False
+        if firstTurn: 
+            legal = self.whose_turn.one_move(space, True)
+        else:
+            legal = self.whose_turn.one_move(space, False)
+        if legal:
+            player.spaces_occupied.append(piece)
+            num_opponent = piece.get_raceCount(opponent.name)
+            # If this player is attacking an opponent, the piece is updated to no longer store the opponent
+            # The player class for the opponent is updated so that they no longer occupy that space 
+            # 1 is subtracted from the number of pieces this player has
+            if num_opponent > 0:
+                piece.update_numPieces(0, opponent.name)
+                opponent.spaces_occupied.remove(piece)
+                opponent.num_pieces -= 1
+            # Does this spot have the opponents decline race in it. If it does, remove the decline piece
+            # from both the board and from the opponents decline_spaces
+            if piece.get_decline(opponent.name):
+                piece.remove_decline(opponent.name)
+                opponent.decline_spaces.remove(piece)
+            return player.pieces_left
+        else:
+            print('not a move')
 
     # def one_move(self, space):
     #     self.pieces_left = self.num_pieces
@@ -136,7 +145,9 @@ class game_play:
                 message += piece.name + ' has ' + str(piece.numTrolls) + ' trolls on it\n'
             for piece in player.decline_spaces:
                 message += piece.name + 'has a troll in decline on it\n'
+        message += 'They have ' + str(player.pieces_left) + ' pieces left to play with\n'        
         print(message)
+
 
 
 class player:
@@ -145,6 +156,7 @@ class player:
         self.race_power = race_power
         self.special_power = special_power
         self.name = name
+        self.pieces_left = num_pieces
         self.opponent = None
         self.spaces_occupied = []
         self.decline_spaces = []
@@ -153,23 +165,39 @@ class player:
 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
     # space is a number - 3 would represent p3
-    def one_move(self, space):
-        self.pieces_left = self.num_pieces
-        boolean = self.is_a_move(space)
+    def one_move(self, space, firstmove):
+        bool1 = self.is_a_move(space)
+        bool2 = self.enough_pieces(space)
         piece = self.game_board.get_piece(space)
         pieces_required = piece.pieces_required()
+        boolean = False
+        if firstmove:
+            boolean = bool2
+        else:
+            boolean = bool1 and bool2
         if boolean:
             self.pieces_left -= pieces_required
             piece.update_numPieces(pieces_required, self.name)
             if piece.lostTribe:
                 piece.lostTribe = False
+        return boolean
             
-
-    # returns true or false depending on if the move is legal
+    # player can only go into neighboring spaces, returns true if a neighboring space
     def is_a_move(self, space):
         piece = self.game_board.get_piece(space)
+        possible_spaces = set()
+        for p in self.spaces_occupied:
+            for neighbor in p.neighbors:
+                possible_spaces.add(neighbor)
+        return piece in possible_spaces
+
+    # player must have enough pieces left, returns true if so
+    def enough_pieces(self, space):
+        piece = self.game_board.get_piece(space)
         pieces_required = piece.pieces_required()
-        return pieces_required < self.pieces_left  
+        return pieces_required <= self.pieces_left 
+            
+
 
 
 
