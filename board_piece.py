@@ -55,6 +55,7 @@ class piece:
     # takes in name - 'ratmen' or 'trolls' and returns a boolean of if their declined race 
     # occupies that spot
     def get_decline(self, name):
+        print(str(self.declineTroll))
         if name == 'ratmen':
             return self.declineRat
         else:

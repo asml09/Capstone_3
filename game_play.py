@@ -37,64 +37,85 @@ class game_play:
     # space is string representation of piece such as 'p3' 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
     def take_turn(self, space, firstTurn):
-        player = self.whose_turn
         opponent = self.whose_turn.opponent
+        player = self.whose_turn
         piece = self.game_board.get_piece(space)
         legal = False
         if firstTurn: 
-            legal = self.whose_turn.one_move(space, True)
+            legal = player.one_move(space, True)
         else:
-            legal = self.whose_turn.one_move(space, False)
+            legal = player.one_move(space, False)
         if legal:
             player.spaces_occupied.append(piece)
             num_opponent = piece.get_raceCount(opponent.name)
-            # If this player is attacking an opponent, the piece is updated to no longer store the opponent
-            # The player class for the opponent is updated so that they no longer occupy that space 
-            # 1 is subtracted from the number of pieces this player has
-            if num_opponent > 0:
-                piece.update_numPieces(0, opponent.name)
-                opponent.spaces_occupied.remove(piece)
-                opponent.num_pieces -= 1
-            # Does this spot have the opponents decline race in it. If it does, remove the decline piece
-            # from both the board and from the opponents decline_spaces
-            if piece.get_decline(opponent.name):
-                piece.remove_decline(opponent.name)
-                opponent.decline_spaces.remove(piece)
-            return player.pieces_left
+            self.take_turn_helper(piece, num_opponent)   
         else:
             print('not a move')
 
-    # def one_move(self, space):
-    #     self.pieces_left = self.num_pieces
-    #     boolean = self.is_a_move(space)
-    #     piece = game_board.get_piece(space)
-    #     pieces_required = piece.pieces_required()
-    #     if boolean:
-    #         self.pieces_left -= pieces_required
-    #         piece.update_numPieces(pieces_required, self.name)
-    #         if piece.lostTribe == True:
-    #             piece.lostTribe = False
+    def take_turn_helper(self, piece, num_opponent):
+        player = self.whose_turn
+        opponent = self.whose_turn.opponent
+        pieces_required = piece.pieces_required()
+        print(pieces_required)
+        # If this player is attacking an opponent, the piece is updated to no longer store the opponent
+        # The player class for the opponent is updated so that they no longer occupy that space 
+        # 1 is subtracted from the number of pieces this player has
+        if num_opponent > 0:
+            piece.update_numPieces(0, opponent.name)
+            opponent.spaces_occupied.remove(piece)
+            opponent.num_pieces -= 1
+            # trolls have an extra defense so 1 more piece is required
+            if player.name == 'ratmen':
+                pieces_required += 1
+            # trolls special power is extra coin for attacking non-empty regions
+            else:
+                player.coins_1turn += 1
+        # Does this spot have the opponents decline race in it. If it does, remove the decline piece
+        # from both the board and from the opponents decline_spaces
+        print(str(piece.get_decline(opponent.name)))
+        print(str(opponent.name))
+        if piece.get_decline(opponent.name):
+            piece.remove_decline(opponent.name)
+            opponent.decline_spaces.remove(piece)
+            # trolls have extra defense even in decline
+            if player.name == 'ratmen':
+                pieces_required += 1
+            # +1 coin for non-empty
+            else:
+                player.coins_1turn += 1
+        player.pieces_left -= (pieces_required)
+        print(str(pieces_required))
+        piece.update_numPieces(pieces_required, player.name)
+        if piece.lostTribe:
+            piece.lostTribe = False
+            if player.name == 'trolls':
+                player.coins_1turn += 1
 
     # it's the next players turn
     def change_turns(self):
         if self.whose_turn.name == 'ratmen':
             self.whose_turn = self.Trolls
+            self.whose_turn.coins_1turn = 0
         else:
             self.whose_turn = self.Ratmen
+            self.whose_turn.coins_1turn = 0
 
     def decline(self):
         player = self.whose_turn
         # remove any remaining declined pieces from the board
         player.decline_spaces = []
-        pieces_declined = player.spaces_occupied
-        # if self.whose_turn == self.Ratmen:
-        #     pieces_declined = self.rat_spaces_occupied
-        # else:
-        #     pieces_declined = self.troll_spaces_occupied
-        for piece in pieces_declined:
-            piece.decline_space(player.name)
+        for piece in player.spaces_occupied:
+            if player.name == 'ratmen':
+                piece.declineRat = True
+                piece.numRats = 0
+            else:
+                piece.declineTroll = True
+                piece.numTrolls = 0
             player.decline_spaces.append(piece)
-            player.spaces_occupied.remove(piece)
+        for piece in player.decline_spaces:
+            print('These are the stupid pieces' + piece.name)
+            print(str(piece.declineTroll))
+        player.spaces_occupied = []
         player.num_pieces = 0
 
     # the turn after decline
@@ -113,19 +134,32 @@ class game_play:
         free_pieces = player.num_pieces - len(spaces_occupied)
         for piece in spaces_occupied: 
             piece.update_numPieces(1, player.name)
+        player.pieces_left = free_pieces
         return free_pieces
 
     # At the end of a players turn, distribute all the pieces evenly
     def distribute_endturn(self):
         player = self.whose_turn
         # leave at least this many pieces in each of the players spaces occupied
-        piece_perspot = player.num_pieces / len(player.spaces_occupied)
+        piece_perspot = player.num_pieces // len(player.spaces_occupied)
         for piece in player.spaces_occupied:
             piece.update_numPieces(piece_perspot, player.name)
         remaining_pieces = player.num_pieces % len(player.spaces_occupied)
         # distribute the remaining pieces randomly (evenly as possible)
-        for i in len(remaining_pieces):
+        for i in range(remaining_pieces):
             player.spaces_occupied[i].update_numPieces(piece_perspot + 1, player.name)
+        player.pieces_left = 0
+
+    # call this method and not the field player.coins_1turn
+    def coins_earned(self):
+        player = self.whose_turn
+        player.coins_1turn += len(player.spaces_occupied) + len(player.decline_spaces)
+        if player.name == 'ratmen':
+            for piece in player.spaces_occupied:
+                if piece.terrain == 'forest':
+                    player.coins_1turn += 1
+        print(player.name + ' recieved ' + str(player.coins_1turn) + ' coins this turn\n')
+        return player.coins_1turn
 
     # print for whose turn it is, what board pieces have their people and how many 
     def print_game(self):
@@ -133,19 +167,19 @@ class game_play:
         message = ''
         if player.name == 'ratmen':
             message += 'It is the ' + player.name + '\'s turn\n'
-            message += 'They have ' + str(player.num_pieces) + ' pieces\n'
+            message += 'They have ' + str(player.num_pieces) + ' pieces total\n'
             for piece in player.spaces_occupied:
                 message += piece.name + ' has ' + str(piece.numRats) + ' ratmen on it\n'
             for piece in player.decline_spaces:
-                message += piece.name + 'has a ratman in decline on it\n'
+                message += piece.name + ' has a ratman in decline on it\n'
         else:
             message += 'It is the ' + player.name + ' turn\n'
-            message += 'They have ' + str(player.num_pieces) + ' pieces\n'
+            message += 'They have ' + str(player.num_pieces) + ' pieces total\n'
             for piece in player.spaces_occupied:
                 message += piece.name + ' has ' + str(piece.numTrolls) + ' trolls on it\n'
             for piece in player.decline_spaces:
-                message += piece.name + 'has a troll in decline on it\n'
-        message += 'They have ' + str(player.pieces_left) + ' pieces left to play with\n'        
+                message += piece.name + ' has a troll in decline on it\n'
+        message += 'They have ' + str(player.pieces_left) + ' pieces left to play with\n'  
         print(message)
 
 
@@ -161,6 +195,7 @@ class player:
         self.spaces_occupied = []
         self.decline_spaces = []
         self.game_board = board
+        self.coins_1turn = 0
 
 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
@@ -169,17 +204,11 @@ class player:
         bool1 = self.is_a_move(space)
         bool2 = self.enough_pieces(space)
         piece = self.game_board.get_piece(space)
-        pieces_required = piece.pieces_required()
         boolean = False
         if firstmove:
             boolean = bool2
         else:
             boolean = bool1 and bool2
-        if boolean:
-            self.pieces_left -= pieces_required
-            piece.update_numPieces(pieces_required, self.name)
-            if piece.lostTribe:
-                piece.lostTribe = False
         return boolean
             
     # player can only go into neighboring spaces, returns true if a neighboring space
