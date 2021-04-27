@@ -34,6 +34,10 @@ class piece:
             count += 1
         count += self.numRats
         count += self.numTrolls
+        if self.declineTroll:
+            count += 1
+        if self.declineRat:
+            count += 1
         return count + 2
 
     # race is the race name
@@ -55,7 +59,6 @@ class piece:
     # takes in name - 'ratmen' or 'trolls' and returns a boolean of if their declined race 
     # occupies that spot
     def get_decline(self, name):
-        print(str(self.declineTroll))
         if name == 'ratmen':
             return self.declineRat
         else:

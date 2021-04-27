@@ -7,8 +7,6 @@ import random
 # player 2 - trolls and pillaging
 # 10 player pieces, +1 for every non-empty region conquered. +1 defense for every region occupied
 
-
-
 class game_play:
     
     def __init__(self, board):
@@ -56,7 +54,6 @@ class game_play:
         player = self.whose_turn
         opponent = self.whose_turn.opponent
         pieces_required = piece.pieces_required()
-        print(pieces_required)
         # If this player is attacking an opponent, the piece is updated to no longer store the opponent
         # The player class for the opponent is updated so that they no longer occupy that space 
         # 1 is subtracted from the number of pieces this player has
@@ -72,8 +69,6 @@ class game_play:
                 player.coins_1turn += 1
         # Does this spot have the opponents decline race in it. If it does, remove the decline piece
         # from both the board and from the opponents decline_spaces
-        print(str(piece.get_decline(opponent.name)))
-        print(str(opponent.name))
         if piece.get_decline(opponent.name):
             piece.remove_decline(opponent.name)
             opponent.decline_spaces.remove(piece)
@@ -84,7 +79,6 @@ class game_play:
             else:
                 player.coins_1turn += 1
         player.pieces_left -= (pieces_required)
-        print(str(pieces_required))
         piece.update_numPieces(pieces_required, player.name)
         if piece.lostTribe:
             piece.lostTribe = False
@@ -112,9 +106,6 @@ class game_play:
                 piece.declineTroll = True
                 piece.numTrolls = 0
             player.decline_spaces.append(piece)
-        for piece in player.decline_spaces:
-            print('These are the stupid pieces' + piece.name)
-            print(str(piece.declineTroll))
         player.spaces_occupied = []
         player.num_pieces = 0
 
@@ -123,8 +114,10 @@ class game_play:
         player = self.whose_turn
         if player.name == 'ratmen':
             player.num_pieces = 12
+            player.pieces_left = 12
         else:
             player.num_pieces = 10
+            player.pieces_left = 10
 
     # At the start of a players turn, one of their pieces is left behind in each area 
     def start_of_turn(self):
