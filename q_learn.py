@@ -4,8 +4,8 @@ from board import board
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, InputLayer
 import numpy as np
-
-
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, InputLayer
 
 # create the board
 game_board = board()
@@ -15,29 +15,65 @@ turn = 1
 game = game_play(game_board)
 # randomly decide who goes first
 game.start_game()
-
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, InputLayer
-
-# model.predict(vector_from_game)
-# one dimensional vector that has same number of values as neural network so 115 long
-
-
-# count coins (reward) for every step, how many coins you got for that particular area taken
 # 24 actions, 23 for the number of spaces 1 for going into decline
-num_actions = 
-# number of spaces, number in state representing it +5 if 5 rats, -5 is 5 trolls
-# 5 * number of spaces 5(23) = 115 long vector ACTUALLLY NO just do 24, one for each state
-num_states = 
+num_actions = 24
+# 5 * number of spaces 5(23) = 115 long vector, for properties 
+# 5 to represent each of ['terrain', 'lostTribe', 'numRats', 'numTrolls', 'declineRat', 'declineTroll']
+num_states = 115
+obs_states = game_board.get_vector()
+actions = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14',
+            'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'decline']
 
-model = Sequential()
-model.add(InputLayer(batch_input_shape=(1, 10)))
-model.add(Dense(10, activation='sigmoid'))
-model.add(Dense(20, activation='linear'))
-model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-print(model.predict(obs_states[1:2]))
+model_troll = Sequential()
+model_troll.add(InputLayer(batch_input_shape=(1, num_states)))
+model_troll.add(Dense(10, activation='sigmoid'))
+model_troll.add(Dense(num_actions, activation='linear')) # final output is always linear activation
+model_troll.compile(loss='mse', optimizer='adam', metrics=['mae'])
+
+model_rat = Sequential()
+model_rat.add(InputLayer(batch_input_shape=(1, num_states)))
+model_rat.add(Dense(10, activation='sigmoid'))
+model_rat.add(Dense(num_actions, activation='linear')) # final output is always linear activation
+model_rat.compile(loss='mse', optimizer='adam', metrics=['mae'])
+
+epsilon = 0
+game.start_game()
+# perhaps check if its legal for random move
+# try both
+if np.random.random_sample() < epsilon: 
+    action_num = np.random.randint(0, num_actions)
+else: 
+    # possible_moves = game.possible_moves()
+    # arg sort, go through to things check if legal
+    action_num = np.argmax(model_troll.predict(obs_states))
+    
+action = actions[action_num]
+if action_num != 23:
+    game.take_turn(action, True)
+game.print_game()
+
+# model - if it is the model_troll or model_rat
+# firstTurn - whether they are starting on the border
+def one_action(model, firstTurn):
+    if np.random.random_sample() < epsilon: 
+        action_num = np.random.randint(0, num_actions)
+    else: 
+        action_num = np.argmax(model.predict(obs_states))
+    action = actions[action_num]
+    if action_num != 23:
+        game.take_turn(action, firstTurn)
+    game.print_game()
+
+one_action(model_troll, False)
+
+while turn < 11:
+    
 
 
+
+
+
+# Q value - state, action
 # Training neural network to predict, given a particular state (defined by features), what the value 
 
 # you make a move, the opponent makes a move. Manager creates two agents, each agent has its own neural 
@@ -84,4 +120,10 @@ print(model.predict(obs_states[1:2]))
 
 # keras save model, saves it for each time you run
 # methods for save, load model
+
+# model.predict(vector_from_game)
+# one dimensional vector that has same number of values as neural network so 115 long
+
+
+# count coins (reward) for every step, how many coins you got for that particular area taken
 

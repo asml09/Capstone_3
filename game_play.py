@@ -210,8 +210,16 @@ class player:
         possible_spaces = set()
         for p in self.spaces_occupied:
             for neighbor in p.neighbors:
-                possible_spaces.add(neighbor)
+                if neighbor not in self.spaces_occupied:
+                    possible_spaces.add(neighbor)
         return piece in possible_spaces
+
+    # checks if a players turn is over
+    def moves_left(self):
+        possible_spaces = set()
+        for p in self.spaces_occupied:
+            for neighbor in p.neighbors:
+                possible_spaces.add(neighbor)
 
     # player must have enough pieces left, returns true if so
     def enough_pieces(self, space):

@@ -1,4 +1,5 @@
 from board_piece import piece
+import numpy as np
 
 # terrain types - farm, hill, forest, mountain, swamp, sea
     # edge - whether the space is on the edge of the board and a player can enter through it
@@ -66,6 +67,33 @@ class board:
     def get_piece(self, space):
         index = space[1:]
         return self.array[int(index) - 1]
+
+    # get a vector 115 long (23 x 5)
+    # 0 represents not a mountain, lostTribe, declineRat, or declineTroll, 1 the opposite
+    # for p1, information about mountain, losttribe, rats, trolls, decline rats, and decline trolls
+    # will appear respectively in arr at 0, 23, 46, 69, and 92 
+    # numRats and numTrolls is represented numRats - numTrolls
+    def get_vector(self):
+        arr = np.zeros(115)
+        for i in range(23):
+            piece = self.array[i]
+            if piece.terrain == 'mountain':
+                arr[i] = 1
+            if piece.lostTribe == True:
+                arr[i + 23] = 1
+            if piece.declineRat == True:
+                arr[i + (2 * 23)] = 1
+            if piece.declineTroll == True:
+                arr[i + (3 * 23)] = 1 
+            diff = piece.numRats - piece.numTrolls
+            arr[i + (4 * 23)] = diff
+        arr = arr.reshape(1, 115)
+        return arr
+            
+            
+            
+
+
 
 
 
