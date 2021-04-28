@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Dense, InputLayer
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, InputLayer
+import random
 
 # create the board
 game_board = board()
@@ -36,38 +37,99 @@ model_rat.add(Dense(10, activation='sigmoid'))
 model_rat.add(Dense(num_actions, activation='linear')) # final output is always linear activation
 model_rat.compile(loss='mse', optimizer='adam', metrics=['mae'])
 
-epsilon = 0
+epsilon = 0.8
 game.start_game()
 # perhaps check if its legal for random move
 # try both
-if np.random.random_sample() < epsilon: 
-    action_num = np.random.randint(0, num_actions)
-else: 
-    # possible_moves = game.possible_moves()
-    # arg sort, go through to things check if legal
-    action_num = np.argmax(model_troll.predict(obs_states))
+# if np.random.random_sample() < epsilon: 
+#     turns = game.whose_turn.possible_spaces()
+#     action_num = random.choice(turns)
+# else: 
+#     # possible_moves = game.possible_moves()
+#     # arg sort, go through to things check if legal
+#     action_nums = np.argsort(model_troll.predict(obs_states))[::-1]
     
-action = actions[action_num]
-if action_num != 23:
-    game.take_turn(action, True)
-game.print_game()
+# action = actions[action_num]
+# if action_num != 23:
+#     game.take_turn(action, True)
+# game.print_game()
 
 # model - if it is the model_troll or model_rat
 # firstTurn - whether they are starting on the border
 def one_action(model, firstTurn):
+    reward = -1
+    decline = False
     if np.random.random_sample() < epsilon: 
-        action_num = np.random.randint(0, num_actions)
+        turns = game.whose_turn.possible_spaces(firstTurn)
+        action_num = random.choice(turns)
+        print(action_num)
     else: 
-        action_num = np.argmax(model.predict(obs_states))
+        action_num = -1
+        action_nums = np.argsort(model_troll.predict(obs_states))[::-1]
+        for i in range(len(action_nums)):
+            possible = game.whose_turn.one_move(actions[i], firstTurn)
+            if possible == True:
+                action_num = i
+                print(action_num)
+            break
     action = actions[action_num]
-    if action_num != 23:
-        game.take_turn(action, firstTurn)
+    print(action)
+    if action != 'decline':
+        reward = game.take_turn(action, firstTurn)
+    else:
+        game.decline()
+        # CHANGE THIS
+        reward = -1
+        decline = True
     game.print_game()
+    return reward, decline
 
-one_action(model_troll, False)
-
+just_declined_rat = False
+just_declined_troll = False
 while turn < 11:
-    
+    # trolls turn
+    print('turn ' + str(turn))
+    if turn == 1:
+        reward, decline = one_action(model_troll, True)
+        if decline:
+            just_declined_troll = True
+    if just_declined_troll:
+        game.after_decline()
+        just_declined_troll = False
+        reward, decline = one_action(model_troll, True)
+        if decline:
+            just_declined_troll = True
+    while game.whose_turn.moves_left():
+        if turn != 1 and not just_declined_troll:
+            game.start_of_turn()
+        reward, decline = one_action(model_troll, False)
+        if decline:
+            just_declined_troll = True
+    game.distribute_endturn()
+    game.change_turns()
+    # rats turn
+    if turn == 1:
+        reward, decline = one_action(model_rat, True)
+        if decline:
+            just_declined_rat = True
+    if just_declined_troll:
+        game.after_decline()
+        just_declined_rat = False
+        reward, decline = one_action(model_rat, True)
+        if decline:
+            just_declined_rat = True
+    while game.whose_turn.moves_left():
+        if turn != 1 and not just_declined_rat:
+            game.start_of_turn()
+        reward, decline = one_action(model_rat, False)
+        if decline:
+            just_declined_rat = True
+    game.distribute_endturn()
+    game.change_turns()
+    turn += 1
+
+
+
 
 
 

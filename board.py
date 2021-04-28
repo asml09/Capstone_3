@@ -66,6 +66,7 @@ class board:
     # piece_name is a string i.e. 'p1' 
     def get_piece(self, space):
         index = space[1:]
+        index = int(index)
         return self.array[int(index) - 1]
 
     # get a vector 115 long (23 x 5)

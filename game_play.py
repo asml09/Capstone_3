@@ -31,6 +31,31 @@ class game_play:
         #     self.whose_turn = self.Trolls  
         # return self.whose_turn.name
 
+    # just get the coins earned from one step of a turn
+    def reward_1step(self, piece):
+        coin = 1
+        player = self.whose_turn
+        if player.name == 'ratmen':
+            # you get one extra coin this turn if its a forest, but you get +1 for every turn that 
+            # you still have this forest, so +2 is an estimate
+            if piece.terrain == 'forest':
+                coin += 2
+            if piece.numTrolls > 0:
+                coin += 1
+            elif piece.declineTroll is True:
+                coin += 1
+        # for trolls if you take a rat or decline rat, you get +1 from your special power, 
+        # and also +1 for taking 1 coin away from your opponent
+        else:
+            if piece.numRats > 0:
+                coin += 2
+            elif piece.declineRat is True:
+                coin += 2
+            elif piece.lostTribe is True:
+                coin += 1
+        return coin
+
+        
     # make one move within a turn (a turn consists of multiple moves)
     # space is string representation of piece such as 'p3' 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
@@ -44,11 +69,18 @@ class game_play:
         else:
             legal = player.one_move(space, False)
         if legal:
+            reward = self.reward_1step(piece)
+            pieces_required = piece.pieces_required()
+            if player.name == 'ratmen':
+                reward = reward * (10 / pieces_required)
+            else:
+                reward = reward * (12 / pieces_required)
             player.spaces_occupied.append(piece)
             num_opponent = piece.get_raceCount(opponent.name)
-            self.take_turn_helper(piece, num_opponent)   
+            self.take_turn_helper(piece, num_opponent)  
+            return reward     
         else:
-            print('not a move')
+            return 'not a move'
 
     def take_turn_helper(self, piece, num_opponent):
         player = self.whose_turn
@@ -134,6 +166,8 @@ class game_play:
     def distribute_endturn(self):
         player = self.whose_turn
         # leave at least this many pieces in each of the players spaces occupied
+        if len(player.spaces_occupied) == 0:
+            return
         piece_perspot = player.num_pieces // len(player.spaces_occupied)
         for piece in player.spaces_occupied:
             piece.update_numPieces(piece_perspot, player.name)
@@ -192,11 +226,10 @@ class player:
 
 
     # possible_spaces for first move = [1, 2, 3, 4, 5, 6, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23]
-    # space is a number - 3 would represent p3
+    # space is a string, 'p3' for example
     def one_move(self, space, firstmove):
         bool1 = self.is_a_move(space)
         bool2 = self.enough_pieces(space)
-        piece = self.game_board.get_piece(space)
         boolean = False
         if firstmove:
             boolean = bool2
@@ -219,7 +252,30 @@ class player:
         possible_spaces = set()
         for p in self.spaces_occupied:
             for neighbor in p.neighbors:
-                possible_spaces.add(neighbor)
+                if neighbor not in self.spaces_occupied:
+                    possible_spaces.add(neighbor)
+        for piece in possible_spaces:
+            if piece.pieces_required() <= self.pieces_left:
+                return True
+        return False
+
+    # list of spaces a player can move into 
+    # firstmove - whether its the first move ever or a player is coming back from decline
+    def possible_spaces(self, firstmove):
+        # first moves are [p1, p2, p3, p4, p5, p6, p11, p12, p16, p17, p18, p19, p20, p21, p22, p23]
+        if firstmove: 
+            return [0, 1, 2, 3, 4, 5, 10, 11, 15, 16, 17, 18, 19, 20, 21, 22]
+        possible_spaces = set()
+        for p in self.spaces_occupied:
+            for neighbor in p.neighbors:
+                if neighbor not in self.spaces_occupied:
+                    possible_spaces.add(neighbor)
+        indexes = []
+        for piece in possible_spaces:
+            name = piece.name
+            name = int(name[1:])
+            indexes.append(name - 1)
+        return indexes
 
     # player must have enough pieces left, returns true if so
     def enough_pieces(self, space):
