@@ -264,7 +264,7 @@ class player:
     def possible_spaces(self, firstmove):
         # first moves are [p1, p2, p3, p4, p5, p6, p11, p12, p16, p17, p18, p19, p20, p21, p22, p23]
         if firstmove: 
-            return [0, 1, 2, 3, 4, 5, 10, 11, 15, 16, 17, 18, 19, 20, 21, 22]
+            return [1, 2, 3, 4, 5, 10, 11, 15, 16, 17, 18, 19, 20, 21]
         possible_spaces = set()
         for p in self.spaces_occupied:
             for neighbor in p.neighbors:
